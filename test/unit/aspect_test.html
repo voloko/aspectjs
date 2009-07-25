@@ -1,0 +1,168 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+        "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+  <title>script.aculo.us Unit test file</title>
+  <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+  <script src="../../lib/prototype.js" type="text/javascript"></script>
+  <script src="../../lib/aspect.js?load=effects,dragdrop" type="text/javascript"></script>
+  <script src="unittest.js" type="text/javascript"></script>
+  <link rel="stylesheet" href="../test.css" type="text/css" />
+</head>
+<body>
+<h1>script.aculo.us Unit test file</h1>
+<p>
+  Test aspects
+</p>
+
+<!-- Log output -->
+<div id="testlog"> </div>
+
+<!-- Tests follow -->
+<script type="text/javascript" language="javascript" charset="utf-8">
+// <![CDATA[
+
+new Test.Unit.Runner({
+
+    test_should_call_aspect_before_method: function() {
+        var executed = [];
+        var Cls = Class.create({
+            f: function() { executed.push('original') }
+        });
+        Aspect.add(Cls.prototype, 'test', {
+            "before f": function() { executed.push('aspect'); }
+        });
+
+        var x = new Cls();
+        x.f();
+        this.assertEqual(['aspect', 'original'].join(','), executed.join(','), 'Should have called aspect\'s f')
+    },
+
+    test_should_call_aspect_after_method: function() {
+        var executed = [];
+        var Cls = Class.create({
+            f: function() { executed.push('original') }
+        });
+        Aspect.add(Cls.prototype, 'test', {
+            "before f": function() { executed.push('before'); },
+            "after f": function() { executed.push('after'); }
+        });
+
+        var x = new Cls();
+        x.f();
+        this.assertEqual(['before', 'original', 'after'].join(','), executed.join(','))
+    },
+    
+    test_should_remove_aspect_from_prototype: function() {
+        var executed = [];
+        var Cls = Class.create({
+            f: function() { executed.push('original') }
+        });
+        Aspect.add(Cls.prototype, 'test', {
+            "before f": function() { executed.push('aspect'); }
+        });
+        Aspect.remove(Cls.prototype, 'test');
+
+        var x = new Cls();
+        x.f();
+        this.assertEqual(['original'].join(','), executed.join(','))
+    },
+    
+    test_should_remove_aspect_from_instance: function() {
+        var executed = [];
+        var Cls = Class.create({
+            f: function() { executed.push('original') }
+        });
+        Aspect.add(Cls.prototype, 'test', {
+            "before f": function() { executed.push('aspect'); }
+        });
+
+        var x = new Cls();
+        Aspect.remove(x, 'test');
+        x.f();
+        this.assertEqual(['original'].join(','), executed.join(','))
+    },
+    
+    test_removing_aspect_from_instance_should_not_affect_prototype: function() {
+        var executed = [];
+        var Cls = Class.create({
+            f: function() { executed.push('original') }
+        });
+        Aspect.add(Cls.prototype, 'test', {
+            "before f": function() { executed.push('aspect'); }
+        });
+    
+        var x = new Cls();
+        var y = new Cls();
+        Aspect.remove(x, 'test');
+        y.f();
+        this.assertEqual(['aspect', 'original'].join(','), executed.join(','))
+    },
+    
+    test_adding_aspect_with_the_same_name_should_replace_old_one: function() {
+        var executed = [];
+        var Cls = Class.create({
+            f: function() { executed.push('original') }
+        });
+        Aspect.add(Cls.prototype, 'test', {
+            "before f": function() { executed.push('aspect'); }
+        });
+    
+        var x = new Cls();
+        Aspect.add(x, 'test', {
+            "before f": function() { executed.push('replaced'); }
+        });
+        x.f();
+        this.assertEqual(['replaced', 'original'].join(','), executed.join(','))
+    },
+    
+    test_before_should_add_before_all: function() {
+        var executed = [];
+        var Cls = Class.create({
+            f: function() { executed.push('original') }
+        });
+        Aspect.add(Cls.prototype, 'test2', {
+            "before f": function() { executed.push('2'); }
+        });
+        Aspect.add(Cls.prototype, 'test1', {
+            "before f": function() { executed.push('1'); }
+        });
+    
+        var x = new Cls();
+        x.f();
+        this.assertEqual(['1', '2', 'original'].join(','), executed.join(','))
+    },
+    
+    test_should_add_functions: function() {
+        var executed = [];
+        var Cls = Class.create({
+            f: function() { executed.push('original') }
+        });
+        Aspect.add(Cls.prototype, 'test', {
+            f1: function() {
+                this.f();
+                return 1;
+            }
+        });
+        var x = new Cls();
+        this.assertEqual(1, x.f1())
+    },
+    
+    test_should_remove_replace_functions: function() {
+        var executed = [];
+        var Cls = Class.create({
+            f: function() { return 1 }
+        });
+        Aspect.add(Cls.prototype, 'test', {
+            f: function() { return 2 }
+        });
+        var x = new Cls();
+        Aspect.remove(x, 'test')
+        this.assertEqual(1, x.f())
+    }
+    
+}, "testlog");
+// ]]>
+</script>
+</body>
+</html>
